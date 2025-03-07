@@ -9,6 +9,7 @@ from utils.display import (setup_console, display_model_info, display_token_info
                           display_query, show_response, show_details, 
                           show_completion_time)
 import time
+from utils.obsidian import export_to_obsidian, extract_key_concepts, generate_follow_up_questions, display_concepts, display_follow_up
 
 def main():
     # Initialize API client
@@ -51,6 +52,28 @@ def main():
     
     # Display detailed information as a tree
     show_details(model, temperature, token_count, elapsed_time, response)
+
+    # After displaying the response:
+    # Extract key concepts
+    concepts = extract_key_concepts(response.text)
+    display_concepts(concepts)
+
+    # Generate follow-up questions
+    follow_up = generate_follow_up_questions(client, response.text, query, model)
+    display_follow_up(follow_up)
+
+    # Ask to export to Obsidian
+    from rich.console import Console
+    console = Console()
+    if console.input("[bold cyan]Export to Obsidian? (y/n): [/bold cyan]").lower() == 'y':
+        export_to_obsidian(
+            response.text,
+            query,
+            model,
+            temperature,
+            follow_up,
+            concepts
+        )
 
 if __name__ == "__main__":
     start_time = time.time()
