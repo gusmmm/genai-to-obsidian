@@ -79,22 +79,86 @@ def sanitize_filename(name):
     # Limit length
     return name[:50]
 
-def extract_key_concepts(text, max_concepts=5):
-    """Extract potential key concepts for linking in Obsidian"""
-    # Split into sentences and find nouns/phrases
-    sentences = text.split(". ")
-    words = text.lower().split()
+def extract_key_concepts(client, response_text, query=None, model=None, max_concepts=10):
+    """Extract meaningful key concepts for linking in Obsidian using AI
     
-    # Remove common words (simple approach)
-    common_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "is", "are", "was", "were"}
-    filtered_words = [word for word in words if word not in common_words and len(word) > 3]
+    Args:
+        client: The GenAI client
+        response_text: The text to analyze for key concepts
+        query: Optional original query for context
+        model: Model to use (defaults to same as main query)
+        max_concepts: Number of concepts to extract (default 10)
+        
+    Returns:
+        list: Key concepts suitable for Obsidian linking
+    """
+    # Prepare prompt for concept extraction
+    concept_prompt = f"""
+    Analyze the following text and extract the {max_concepts} most significant concepts or terms.
     
-    # Count frequency
+    Focus on multi-word expressions, technical terms, theoretical frameworks, and meaningful phrases 
+    rather than common single words. Good examples would be "extraterrestrial life", "carbon-based life forms", 
+    "metabolic processes", or "self-replicating systems".
+    
+    Text to analyze:
+    ```
+    {response_text[:2000]}  # Limit to first 2000 chars to avoid token limits
+    ```
+    
+    Return ONLY a numbered list with each concept on its own line, no explanations.
+    Do not use bullet points or any other formatting, just the concepts themselves.
+    Important: Make sure concepts are in a form useful for knowledge graph linking (proper nouns, technical terms, key phrases).
+    """
+    
+    with console.status("[bold cyan]Extracting key concepts...", spinner="dots"):
+        try:
+            concept_response = client.models.generate_content(
+                model=model,  # Use same model as main query if provided
+                contents=concept_prompt,
+                config={"temperature": 0.2}  # Low temperature for focused results
+            )
+            
+            # Parse the response - first split by lines
+            concept_lines = concept_response.text.strip().split('\n')
+            
+            # Clean up concepts - remove numbers, whitespace, etc.
+            concepts = []
+            for line in concept_lines:
+                # Remove leading numbers, periods, and whitespace
+                clean_line = re.sub(r'^\d+[\.\)]*\s*', '', line).strip()
+                if clean_line and len(clean_line) > 2:  # Ensure non-empty and substantial
+                    concepts.append(clean_line)
+            
+            # Limit to requested number
+            return concepts[:max_concepts]
+            
+        except Exception as e:
+            console.print(f"[bold red]Error extracting concepts:[/bold red] {str(e)}")
+            # Fallback to simple frequency-based extraction
+            return _extract_concepts_fallback(response_text, max_concepts)
+
+def _extract_concepts_fallback(text, max_concepts=10):
+    """Fallback method using simple text analysis if AI extraction fails"""
+    import re
     from collections import Counter
-    word_counts = Counter(filtered_words)
     
-    # Return top concepts
-    return [word for word, count in word_counts.most_common(max_concepts)]
+    # Try to extract multi-word phrases (simple approach)
+    text = text.lower()
+    
+    # Look for potential 2-3 word phrases
+    words = re.findall(r'\b[\w-]+\b', text)
+    bigrams = [f"{words[i]} {words[i+1]}" for i in range(len(words)-1)]
+    trigrams = [f"{words[i]} {words[i+1]} {words[i+2]}" for i in range(len(words)-2)]
+    
+    # Count frequencies
+    phrase_counter = Counter(bigrams + trigrams)
+    
+    # Filter out common phrases
+    common_phrases = {"of the", "in the", "to the", "and the", "for the", "is a", "such as"}
+    filtered_phrases = [phrase for phrase, count in phrase_counter.most_common(max_concepts*3) 
+                       if phrase not in common_phrases and len(phrase) > 5]
+    
+    return filtered_phrases[:max_concepts]
 
 def generate_follow_up_questions(client, response_text, query, model):
     """Generate follow-up questions based on the response"""
@@ -161,7 +225,7 @@ def create_obsidian_note(response_text, query, model, temperature,
 
 def export_to_obsidian(response_text, query, model, temperature, 
                        follow_up_questions=None, key_concepts=None,
-                       folder="AI-Generated"):
+                       folder="AI-Generated", client=None):
     """Export response to an Obsidian-friendly markdown file"""
     
     # Get vault path
@@ -184,8 +248,10 @@ def export_to_obsidian(response_text, query, model, temperature,
     filepath = os.path.join(target_dir, filename)
     
     # Extract key concepts if not provided
-    if key_concepts is None:
-        key_concepts = extract_key_concepts(response_text)
+    if key_concepts is None and client is not None:
+        key_concepts = extract_key_concepts(client, response_text, query, model)
+    elif key_concepts is None:
+        key_concepts = _extract_concepts_fallback(response_text)
     
     # Create note structure
     note = create_obsidian_note(

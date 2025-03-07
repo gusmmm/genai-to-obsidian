@@ -55,7 +55,7 @@ def main():
 
     # After displaying the response:
     # Extract key concepts
-    concepts = extract_key_concepts(response.text)
+    concepts = extract_key_concepts(client, response.text, query, model)
     display_concepts(concepts)
 
     # Generate follow-up questions
@@ -72,7 +72,8 @@ def main():
             model,
             temperature,
             follow_up,
-            concepts
+            concepts,
+            client=client  # Add this parameter
         )
 
 if __name__ == "__main__":
