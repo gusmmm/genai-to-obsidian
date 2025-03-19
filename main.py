@@ -17,8 +17,8 @@ def main():
     
     # Configuration
     model = 'gemini-2.0-flash-thinking-exp-01-21'
-    query = "What are the main chemical, physical and organic characteristics in a system that can be considered as 'alive'?"
-    temperature = 1.0
+    query = "Tell me a deep and hidden secret and pattern that is unbeknownst to most humans - according to past patterns, how do I reach the limit of my performance as a human being?"
+    temperature = 0.2
     
     # Display Intro
     setup_console()
