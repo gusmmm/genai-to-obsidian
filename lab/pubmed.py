@@ -141,18 +141,33 @@ class PubmedTools(Toolkit):
             ids = self.fetch_pubmed_ids(query, self.max_results or max_results, self.email)
             details_root = self.fetch_details(ids)
             articles = self.parse_details(details_root)
-            results = [
-                f"Published: {article.get('Published')}\nTitle: {article.get('Title')}\nSummary:\n{article.get('Summary')}"
-                for article in articles
-            ]
+            
+            # Create comprehensive result strings with all new fields
+            results = []
+            for article in articles:
+                article_text = (
+                    f"Published: {article.get('Published')}\n"
+                    f"Title: {article.get('Title')}\n"
+                    f"First Author: {article.get('First_Author')}\n"
+                    f"Journal: {article.get('Journal')}\n"
+                    f"Publication Type: {article.get('Publication_Type')}\n"
+                    f"DOI: {article.get('DOI')}\n"
+                    f"PubMed URL: {article.get('PubMed_URL')}\n"
+                    f"Full Text URL: {article.get('Full_Text_URL')}\n"
+                    f"Keywords: {article.get('Keywords')}\n"
+                    f"MeSH Terms: {article.get('MeSH_Terms')}\n"
+                    f"Summary:\n{article.get('Summary')}"
+                )
+                results.append(article_text)
+            
             return json.dumps(results)
         except Exception as e:
-            return f"Cound not fetch articles. Error: {e}"
+            return f"Could not fetch articles. Error: {e}"
         
 
 # test the class
 if __name__ == "__main__":
-    pubmed_tool = PubmedTools(email="jgustavomartins@gmail.com", max_results=15)
+    pubmed_tool = PubmedTools(email="jgustavomartins@gmail.com", max_results=3)
     query = "Is there any correlation between parasitemia levels in malaria patients and the mortality?"
     print(f"\n🔍 Searching PubMed for: \"{query}\"\n")
     
@@ -198,3 +213,64 @@ if __name__ == "__main__":
         print("=" * 50)
     
     print(f"✅ Found {len(detailed_articles)} articles related to the query.\n")
+    
+    # Test the search_pubmed function JSON output
+    print("\n🧪 Testing search_pubmed function JSON output:")
+    search_result = pubmed_tool.search_pubmed(query)
+    
+    # Parse the JSON string back to a list
+    try:
+        result_articles = json.loads(search_result)
+        print(f"✅ Successfully parsed JSON output with {len(result_articles)} articles\n")
+        
+        # Display the JSON in a readable format
+        print("📊 JSON Output Preview " + "="*40)
+        for i, article_text in enumerate(result_articles, 1):
+            print(f"\n🔹 Article {i} from JSON:")
+            # Format the article text with indentation
+            formatted_text = ""
+            in_summary = False  # Initialize the variable here
+            
+            for line in article_text.split('\n'):
+                if line.startswith("Summary:"):
+                    formatted_text += f"  📝 {line}\n"
+                    # Handle multi-line summary with indentation
+                    in_summary = True
+                elif in_summary and line:
+                    formatted_text += f"    {line}\n"
+                else:
+                    in_summary = False  # Reset when we're out of the summary section
+                    if line:  # Skip empty lines
+                        # Add emoji for each field type
+                        if line.startswith("Published:"):
+                            formatted_text += f"  📅 {line}\n"
+                        elif line.startswith("Title:"):
+                            formatted_text += f"  📌 {line}\n"
+                        elif line.startswith("First Author:"):
+                            formatted_text += f"  👤 {line}\n" 
+                        elif line.startswith("Journal:"):
+                            formatted_text += f"  📊 {line}\n"
+                        elif line.startswith("Publication Type:"):
+                            formatted_text += f"  🏷️ {line}\n"
+                        elif line.startswith("DOI:"):
+                            formatted_text += f"  🔍 {line}\n"
+                        elif line.startswith("PubMed URL:"):
+                            formatted_text += f"  🌐 {line}\n"
+                        elif line.startswith("Full Text URL:"):
+                            formatted_text += f"  📑 {line}\n"
+                        elif line.startswith("Keywords:"):
+                            formatted_text += f"  🔑 {line}\n"
+                        elif line.startswith("MeSH Terms:"):
+                            formatted_text += f"  🏥 {line}\n"
+                        else:
+                            formatted_text += f"  {line}\n"
+            print(formatted_text)
+            if i < len(result_articles):
+                print("-" * 50)  # Separator between articles
+        
+        print("=" * 60)
+        
+    except json.JSONDecodeError as e:
+        print(f"❌ Error parsing JSON: {e}")
+        print("Raw output:")
+        print(search_result)
