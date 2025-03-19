@@ -16,9 +16,9 @@ def main():
     client = initialize_client()
     
     # Configuration
-    model = 'gemini-2.0-flash'
-    query = "Tell a secret in a very dark humour and sarcastic way, with a mindblowing twist"
-    temperature = 0.2
+    model = 'gemini-2.0-flash-thinking-exp-01-21'
+    query = "Tell a secret horror story in a very dark humour and sarcastic way, with a mindblowing twist."
+    temperature = 0.8
     
     # Display Intro
     setup_console()
