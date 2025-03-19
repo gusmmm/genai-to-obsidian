@@ -16,8 +16,8 @@ def main():
     client = initialize_client()
     
     # Configuration
-    model = 'gemini-2.0-flash-thinking-exp-01-21'
-    query = "Tell me a deep and hidden secret and pattern that is unbeknownst to most humans - according to past patterns, how do I reach the limit of my performance as a human being?"
+    model = 'gemini-2.0-flash'
+    query = "Tell a secret in a very dark humour and sarcastic way, with a mindblowing twist"
     temperature = 0.2
     
     # Display Intro
