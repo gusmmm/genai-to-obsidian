@@ -167,7 +167,7 @@ class PubmedTools(Toolkit):
 
 # test the class
 if __name__ == "__main__":
-    pubmed_tool = PubmedTools(email="jgustavomartins@gmail.com", max_results=3)
+    pubmed_tool = PubmedTools(email="jgustavomartins@gmail.com", max_results=4)
     query = "Is there any correlation between parasitemia levels in malaria patients and the mortality?"
     print(f"\n🔍 Searching PubMed for: \"{query}\"\n")
     

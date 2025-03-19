@@ -15,13 +15,13 @@ pubmed_agent = Agent(
         api_key=GEMINI_API_KEY
         ),
     markdown=True,
-    tools=[PubmedTools(max_results=10)],
+    tools=[PubmedTools(max_results=4)],
     description="" \
         "You are an agent that can search PubMed and answer questions.\
                 Use the query to search PubMed. Using the summary of the returned papers to answer the query. \
                 Use simple and direct language. Give concrete values to answer the question,if possible.\
                 Provide a list of the most relevant articles and their findings related to the query.\
-                Write in JSON format the full list of results with keys 'Published','Title', 'Summary'.\
+                Write in JSON format the full list of results with keys 'Published','Title','First_author', 'DOI' and 'Summary'.\
                 ", 
     show_tool_calls=True
 )
