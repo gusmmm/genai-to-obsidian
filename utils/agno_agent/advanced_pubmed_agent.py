@@ -28,7 +28,7 @@ literature_review_agent = Agent(
     When asked about a topic:
     
     1. Break down the topic into its key concepts
-    2. Search for relevant publications
+    2. Search for relevant publications - use max_results=15
     3. Use appropriate filters like publication_type, publication_date, sort_by options
     4. For reviews, use publication_type="Review"
     5. For recent research, use sort_by="pub_date"
