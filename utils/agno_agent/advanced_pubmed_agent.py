@@ -15,7 +15,7 @@ GEMINI_API_KEY = key_manager.get("GEMINI_API_KEY")
 # Create a literature review agent using advanced PubmedTools
 literature_review_agent = Agent(
     model=Gemini(
-        id="gemini-2.0-pro-exp-02-05",
+        id="gemini-2.0-flash",
         api_key=GEMINI_API_KEY
     ),
     markdown=True,
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # Example query to test the agent
     query = input("Enter a research topic to review: ")
     if not query:
-        query = "Recent advances in CRISPR gene therapy for cancer treatment"
+        query = "Recent advances in AI and machine learning in critical care"
     
     print(f"\n🔍 Searching for literature on: {query}\n")
     literature_review_agent.print_response(query, markdown=True)
